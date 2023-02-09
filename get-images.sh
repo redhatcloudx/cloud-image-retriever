@@ -9,7 +9,8 @@ echo "us-east-1" > regions.txt
 echo "us-east-2" >> regions.txt
 
 function download_image() {
-    aws --region=${1} ec2 describe-images --filters Name=is-public,Values=true | jq -c  > ${1}.json
+    aws --region=${1} ec2 describe-images --filters Name=is-public,Values=true
+    # aws --region=${1} ec2 describe-images --filters Name=is-public,Values=true | jq -c > ${1}.json
 }
 
 for REGION in $(cat regions.txt); do
