@@ -10,5 +10,6 @@ echo "us-east-2" >> regions.txt
 
 for REGION in $(cat regions.txt); do
   aws --region=${REGION} ec2 describe-images \
-    --filters Name=is-public,Values=true | jq -c | zstd --ultra -22 - > ${REGION}.json.zst
+    --filters Name=is-public,Values=true | jq -c | \
+    zstd -19 -T0 --auto-threads=logical - > ${REGION}.json
 done
