@@ -5,10 +5,10 @@ aws ec2 describe-regions --filters Name=opt-in-status,Values=opted-in,opt-in-not
     | jq -r '.Regions[].RegionName' | sort > regions.txt
 
 for REGION in $(cat regions.txt); do
-  sem -j 4 "aws --region=${REGION} ec2 describe-images \
+  sem -j 10 "aws --region=${REGION} ec2 describe-images \
     --filters Name=is-public,Values=true | jq -c > ${REGION}.json"
 done
 
 sem --wait
 
-zstd -T0 -19 --auto-threads=logical --rm *.json
+zstd -vv -T0 -19 --auto-threads=logical --rm *.json
