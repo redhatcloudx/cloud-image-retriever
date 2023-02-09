@@ -26,7 +26,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
-          role-to-assume: arn:aws:iam::911986281031:role/github-actions-aws-images
+          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
           role-duration-seconds: 1800
           aws-region: us-east-2
           
@@ -36,7 +36,8 @@ jobs:
       - name: Run image download script
         run: ./getimages.sh
 
-      - uses: actions/upload-artifact@v3
+      - name: Store image data in artifact
+        uses: actions/upload-artifact@v3
         with:
           name: cloud-image-data
           path: "*.json"
