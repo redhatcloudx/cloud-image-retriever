@@ -4,10 +4,6 @@ set -euxo pipefail
 aws ec2 describe-regions --filters Name=opt-in-status,Values=opted-in,opt-in-not-required \
     | jq -r '.Regions[].RegionName' | sort > regions.txt
 
-# Short circuit with just two regions for now.
-echo "us-east-1" > regions.txt
-echo "us-east-2" >> regions.txt
-
 for REGION in $(cat regions.txt); do
   sem -j 4 aws --region=${REGION} ec2 describe-images \
     --filters Name=is-public,Values=true | jq -c > ${REGION}.json
@@ -15,4 +11,4 @@ done
 
 sem --wait
 
-zstd -T0 -19 --auto-threads=logical -rm *.json
+zstd -T0 -19 --auto-threads=logical --rm *.json
