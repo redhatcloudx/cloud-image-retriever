@@ -23,5 +23,14 @@ jobs:
       - name: "Set up Cloud SDK"
         uses: "google-github-actions/setup-gcloud@v0"
 
-      - name: "List buckets"
-        run: "gcloud storage ls"
+      - name: Get images
+        run: |
+          gcloud compute images list --standard-images --format="json" > gcp.json
+          zstd -T0 -19 --auto-threads=logical gcp.json
+          ls -alh
+
+      - name: Store image data in artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: azure-image-data
+          path: "gcp.json.zst"
