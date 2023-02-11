@@ -1,3 +1,5 @@
+# Guide: https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-azure
+# More: https://github.com/Azure/actions-workflow-samples/blob/master/assets/create-secrets-for-GitHub-workflows.md
 name: Azure
 
 on:
@@ -26,3 +28,12 @@ jobs:
         run: |
           az account show
           az group list
+          az vm image list --all --only-show-errors -o jsonc -l eastus > azure.json
+          zstd -T0 -19 --auto-threads=logical azure.json
+          ls -alh
+
+      - name: Store image data in artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: azure-image-data
+          path: "*.json.zst"
