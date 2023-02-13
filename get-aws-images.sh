@@ -19,4 +19,4 @@ for REGION in $(cat regions.txt); do
   cp -av ${REGION}.json aws/${REGION}/index.json
 done
 
-s3cmd sync --acl-public --delete-removed --guess-mime-type --no-mime-magic --rexclude '.*' aws/ s3://cloudx-testing/aws/
+s3cmd sync --progress --verbose --acl-public --delete-removed --guess-mime-type --no-mime-magic --rexclude '.*' aws/ s3://cloudx-testing/aws/
