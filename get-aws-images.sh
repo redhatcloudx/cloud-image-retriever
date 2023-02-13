@@ -10,7 +10,7 @@ echo "us-east-2" >> regions.txt
 
 for REGION in $(cat regions.txt); do
   sem -j 10 "aws --region=${REGION} ec2 describe-images --filters Name=is-public,Values=true | jq -c > ${REGION}.json"
-  mkdir aws/${REGION}/
+  mkdir -vp aws/${REGION}/
   cp ${REGION}.json aws/${REGION}/index.json
 done
 
