@@ -34,7 +34,7 @@ jobs:
         run: aws sts get-caller-identity
 
       - name: Run image download script
-        run: ./get-images.sh
+        run: ./get-aws-images.sh
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
