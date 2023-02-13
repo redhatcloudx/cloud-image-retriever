@@ -84,6 +84,52 @@ resource "aws_iam_policy" "get_image_data" {
 resource "aws_iam_role" "github_actions_image_retriever" {
   name = "github_actions_image_retriever"
 
-  managed_policy_arns = [aws_iam_policy.get_image_data.arn]
+  managed_policy_arns = [aws_iam_policy.get_image_data.arn, aws_iam_policy.publish_data.arn]
   assume_role_policy  = data.aws_iam_policy_document.github_actions_web_identity_policy.json
+}
+
+#############################################################################
+# S3 bucket
+resource "aws_s3_bucket" "cloudx_testing" {
+  bucket = "cloudx-testing"
+}
+
+resource "aws_s3_bucket_acl" "example_bucket_acl" {
+  bucket = aws_s3_bucket.cloudx_testing.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_website_configuration" "cloudx_testing" {
+  bucket = aws_s3_bucket.cloudx_testing.bucket
+
+  index_document {
+    suffix = "index.json"
+  }
+}
+
+data "aws_iam_policy_document" "publish_data" {
+  statement {
+    sid    = "PublishImageData"
+    effect = "Allow"
+
+    actions = [
+      "s3:DeleteObjectTagging",
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:GetObjectTagging",
+      "s3:ListBucket",
+      "s3:PutObjectTagging"
+    ]
+
+    resources = [
+      "arn:aws:s3:::cloudx-testing",
+      "arn:aws:s3:::*/*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "publish_data" {
+  name = "publish_data"
+
+  policy = data.aws_iam_policy_document.publish_data.json
 }
