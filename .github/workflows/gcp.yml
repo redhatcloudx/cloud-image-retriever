@@ -27,9 +27,6 @@ jobs:
       - name: "Set up Cloud SDK"
         uses: "google-github-actions/setup-gcloud@v0"
 
-      - name: Install s3cmd
-        run: pipx install s3cmd
-
       - name: Get images
         run: |
           gcloud compute images list --standard-images --format="json" > gcp.json

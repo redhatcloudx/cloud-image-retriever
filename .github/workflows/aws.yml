@@ -22,6 +22,9 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v3
 
+      - name: Install s3cmd
+        run: pipx install s3cmd
+
       # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
