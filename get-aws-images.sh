@@ -10,10 +10,13 @@ echo "us-east-2" >> regions.txt
 
 for REGION in $(cat regions.txt); do
   sem -j 10 "aws --region=${REGION} ec2 describe-images --filters Name=is-public,Values=true | jq -c > ${REGION}.json"
-  mkdir -vp aws/${REGION}/
-  cp ${REGION}.json aws/${REGION}/index.json
 done
 
 sem --wait
+
+for REGION in $(cat regions.txt); do
+  mkdir -vp aws/${REGION}/
+  cp -av ${REGION}.json aws/${REGION}/index.json
+done
 
 s3cmd sync --acl-public --delete-removed --guess-mime-type --no-mime-magic --rexclude '.*' aws/ s3://cloudx-testing/aws/
