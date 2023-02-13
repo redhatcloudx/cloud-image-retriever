@@ -116,9 +116,11 @@ data "aws_iam_policy_document" "publish_data" {
       "s3:DeleteObjectTagging",
       "s3:PutObject",
       "s3:GetObject",
+      "s3:GetObjectAttributes",
       "s3:GetObjectTagging",
       "s3:ListBucket",
-      "s3:PutObjectTagging"
+      "s3:PutObjectTagging",
+      "s3:PutObjectAcl"
     ]
 
     resources = [

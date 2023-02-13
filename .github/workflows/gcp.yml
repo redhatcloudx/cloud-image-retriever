@@ -1,10 +1,10 @@
 name: GCP
 
 on:
-  # push:
-  #   branches: [ "main" ]
-  # pull_request:
-  #   branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
@@ -24,17 +24,32 @@ jobs:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
+      - name: Install s3cmd
+        run: pipx install s3cmd
+
       - name: "Set up Cloud SDK"
         uses: "google-github-actions/setup-gcloud@v0"
 
       - name: Get images
         run: |
           gcloud compute images list --standard-images --format="json" > gcp.json
-          zstd -T0 -19 --auto-threads=logical gcp.json
-          ls -alh
+
+      # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
+          role-duration-seconds: 1800
+          aws-region: us-east-2
+
+      - name: Upload to S3 storage
+        run: |
+          mkdir -vp gcp
+          cp gcp.json gcp/index.json
+          s3cmd sync --progress --verbose --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/gcp/ s3://cloudx-testing/gcp/
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
         with:
-          name: azure-image-data
-          path: "gcp.json.zst"
+          name: gcp-image-data
+          path: "gcp.json"

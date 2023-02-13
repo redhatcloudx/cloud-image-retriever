@@ -3,10 +3,10 @@
 name: Azure
 
 on:
-  # push:
-  #   branches: [ "main" ]
-  # pull_request:
-  #   branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
@@ -21,6 +21,9 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v3
 
+      - name: Install s3cmd
+        run: pipx install s3cmd
+
       - name: 'Az CLI login'
         uses: azure/login@v1
         with:
@@ -33,11 +36,23 @@ jobs:
           az account show
           az group list
           az vm image list --all --only-show-errors -o jsonc -l eastus > azure.json
-          zstd -T0 -19 --auto-threads=logical azure.json
-          ls -alh
+
+      # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
+          role-duration-seconds: 1800
+          aws-region: us-east-2
+
+      - name: Upload to S3 storage
+        run: |
+          mkdir -vp azure
+          cp azure.json azure/index.json
+          s3cmd sync --progress --verbose --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/azure/ s3://cloudx-testing/azure/
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
         with:
           name: azure-image-data
-          path: "azure.json.zst"
+          path: "azure.json"
