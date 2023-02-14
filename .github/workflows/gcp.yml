@@ -32,7 +32,7 @@ jobs:
 
       - name: Get images
         run: |
-          gcloud compute images list --standard-images --format="json" | jq -c > gcp.json
+          gcloud compute images list --standard-images --format="json" > gcp.json
 
       # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
       - name: Configure AWS credentials
