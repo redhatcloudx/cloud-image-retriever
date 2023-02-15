@@ -71,7 +71,7 @@ jobs:
         run: |
           az account show
           az group list
-          az vm image list --all --only-show-errors -o json -l eastus > azure.json
+          az vm image list --all --only-show-errors -o json -l eastus | jq -c > azure.json
 
       # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
       - name: Configure AWS credentials
@@ -114,7 +114,7 @@ jobs:
 
       - name: Get images
         run: |
-          gcloud compute images list --standard-images --format="json" > gcp.json
+          gcloud compute images list --standard-images --format="json" | jq -c > gcp.json
 
       # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
       - name: Configure AWS credentials
