@@ -49,7 +49,7 @@ jobs:
         run: |
           mkdir -vp azure
           cp azure.json azure/index.json
-          s3cmd sync --progress --verbose --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/azure/ s3://cloudx-testing/azure/
+          s3cmd sync --progress --verbose --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/azure/ s3://cloudx-json-bucket/azure/
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
