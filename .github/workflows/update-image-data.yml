@@ -1,0 +1,148 @@
+name: AWS
+
+on:
+  push:
+    branches: 
+      - "main"
+  pull_request:
+    branches:
+      - "main"
+  schedule:
+    - cron: '45 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_DEFAULT_OUTPUT: json
+  AWS_PAGER: ""
+
+jobs:
+  AWS:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v3
+
+      - name: Install s3cmd
+        run: pipx install s3cmd
+
+      # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
+          role-duration-seconds: 1800
+          aws-region: us-east-2
+          
+      - name: Test authentication
+        run: aws sts get-caller-identity
+
+      - name: Run image download script
+        run: ./get-aws-images.sh
+
+      - name: Store image data in artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: aws-image-data
+          path: "*.json"
+
+  Azure:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Clone repository
+        uses: actions/checkout@v3
+
+      - name: Install s3cmd
+        run: pipx install s3cmd
+
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  
+      - name: 'Run az commands'
+        run: |
+          az account show
+          az group list
+          az vm image list --all --only-show-errors -o json -l eastus > azure.json
+
+      # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
+          role-duration-seconds: 1800
+          aws-region: us-east-2
+
+      - name: Upload to S3 storage
+        run: |
+          mkdir -vp azure
+          cp azure.json azure/index.json
+          s3cmd sync --progress --verbose --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/azure/ s3://cloudx-json-bucket/azure/
+
+      - name: Store image data in artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: azure-image-data
+          path: "azure.json"
+
+  GCP:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: "actions/checkout@v3"
+
+      - id: "auth"
+        name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v1"
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Install s3cmd
+        run: pipx install s3cmd
+
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v1"
+
+      - name: Get images
+        run: |
+          gcloud compute images list --standard-images --format="json" > gcp.json
+
+      # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
+          role-duration-seconds: 1800
+          aws-region: us-east-2
+
+      - name: Upload to S3 storage
+        run: |
+          mkdir -vp gcp
+          cp gcp.json gcp/index.json
+          s3cmd sync --progress --verbose --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/gcp/ s3://cloudx-json-bucket/gcp/
+
+      - name: Store image data in artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gcp-image-data
+          path: "gcp.json"
+
+  parser:
+    name: "Parse image data"
+    runs-on: ubuntu-latest
+    needs: [AWS, Azure, GCP]
+    steps:
+      - uses: "actions/checkout@v3"
+
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v3
+
+      - name: List files
+        run: ls -alRh .
