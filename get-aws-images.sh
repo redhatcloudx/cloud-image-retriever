@@ -11,10 +11,8 @@ done
 sem --wait
 
 for REGION in $(cat regions.txt); do
-  mkdir -vp aws/${REGION}/
-  cp -av ${REGION}.json aws/${REGION}/index.json
+  mkdir -p aws/${REGION}/
+  cp -a ${REGION}.json aws/${REGION}/index.json
 done
 
-ls -alR aws
-
-s3cmd sync --progress --verbose --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/aws/ s3://cloudx-json-bucket/aws/
+s3cmd sync --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/aws/ s3://cloudx-json-bucket/aws/
