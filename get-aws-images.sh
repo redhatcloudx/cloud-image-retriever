@@ -17,4 +17,4 @@ done
 
 ls -alR aws
 
-s3cmd sync --progress --verbose --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/aws/ s3://cloudx-testing/aws/
+s3cmd sync --progress --verbose --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/aws/ s3://cloudx-json-bucket/aws/
