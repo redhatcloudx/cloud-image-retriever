@@ -85,7 +85,7 @@ jobs:
         run: |
           mkdir -vp azure
           cp azure.json azure/index.json
-          s3cmd sync --progress --verbose --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/azure/ s3://cloudx-json-bucket/azure/
+          s3cmd sync --progress --verbose --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/azure/ s3://cloudx-json-bucket/raw/azure/
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
@@ -128,7 +128,7 @@ jobs:
         run: |
           mkdir -vp gcp
           cp gcp.json gcp/index.json
-          s3cmd sync --progress --verbose --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/gcp/ s3://cloudx-json-bucket/gcp/
+          s3cmd sync --progress --verbose --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/gcp/ s3://cloudx-json-bucket/raw/gcp/
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
