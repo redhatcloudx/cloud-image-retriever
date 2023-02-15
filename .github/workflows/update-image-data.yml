@@ -1,4 +1,4 @@
-name: AWS
+name: Update image data
 
 on:
   push:
