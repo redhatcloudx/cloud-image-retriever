@@ -16,6 +16,8 @@ provider "aws" {
   default_tags {
     tags = {
       Project = "cloud-image-retriever"
+      Environment = "dev"
+      Owner = "mhayden"
     }
   }
 }
@@ -96,7 +98,7 @@ resource "aws_s3_bucket" "cloudx_testing" {
 
 resource "aws_s3_bucket_acl" "example_bucket_acl" {
   bucket = aws_s3_bucket.cloudx_testing.id
-  acl    = "public-read"
+  acl    = "private"
 }
 
 resource "aws_s3_bucket_website_configuration" "cloudx_testing" {
