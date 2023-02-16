@@ -27,9 +27,6 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v3
 
-      - name: Install s3cmd
-        run: pipx install s3cmd
-
       # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
@@ -37,12 +34,25 @@ jobs:
           role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
           role-duration-seconds: 1800
           aws-region: us-east-2
-          
-      - name: Test authentication
-        run: aws sts get-caller-identity
 
-      - name: Run image download script
-        run: bash .github/get-aws-images.sh
+      - name: Get current list of AWS regions
+        run: |
+          aws ec2 describe-regions \
+            --filters Name=opt-in-status,Values=opted-in,opt-in-not-required | \
+            jq -r '.Regions[].RegionName' | \
+            sort > regions.txt
+
+      - name: Get images for each region
+        run: |
+          #!/bin/bash
+          mkdir output
+          for REGION in $(cat regions.txt); do
+            sem -j 5 "aws --region=${REGION} ec2 describe-images --filters Name=is-public,Values=true | jq .Images > output/${REGION}.json"
+          done
+          sem --wait
+
+      - name: Join all region files into one with pandas
+        run: .github/join-aws-regions.py
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
@@ -56,9 +66,6 @@ jobs:
     steps:
       - name: Clone repository
         uses: actions/checkout@v3
-
-      - name: Install s3cmd
-        run: pipx install s3cmd
 
       - name: 'Az CLI login'
         uses: azure/login@v1
@@ -99,9 +106,6 @@ jobs:
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-
-      - name: Install s3cmd
-        run: pipx install s3cmd
 
       - name: "Set up Cloud SDK"
         uses: "google-github-actions/setup-gcloud@v1"
