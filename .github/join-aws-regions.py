@@ -32,7 +32,7 @@ def read_json(region: str) -> pd.DataFrame:
 
 def write_json(amis_df: pd.DataFrame) -> None:
     """Write the json data for a region."""
-    amis_df.to_json("aws.json", orient="records")
+    amis_df.to_json("index.json", orient="records")
     return None
 
 if __name__ == "__main__":
