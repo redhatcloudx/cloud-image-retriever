@@ -5,14 +5,14 @@ aws ec2 describe-regions --filters Name=opt-in-status,Values=opted-in,opt-in-not
     | jq -r '.Regions[].RegionName' | sort > regions.txt
 
 for REGION in $(cat regions.txt); do
-  sem -j 10 "aws --region=${REGION} ec2 describe-images --filters Name=is-public,Values=true | jq -c .Images > ${REGION}.json"
+  sem -j 10 "aws --region=${REGION} ec2 describe-images --filters Name=is-public,Values=true > ${REGION}-raw.json"
 done
 
 sem --wait
 
 for REGION in $(cat regions.txt); do
-  mkdir -p aws/${REGION}/
-  cp -a ${REGION}.json aws/${REGION}/index.json
+  cat ${REGION}-raw.json | jq .Images | jq --arg newval "$REGION" '.Images[] += { Region: $newval }' > aws-${REGION}.json
 done
 
-s3cmd sync --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/aws/ s3://cloudx-json-bucket/raw/aws/
+# Merge all of the JSON files into one.
+jq -c -s add aws-*.json > index.json
