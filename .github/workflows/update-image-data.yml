@@ -42,11 +42,6 @@ jobs:
             jq -r '.Regions[].RegionName' | \
             sort > regions.txt
 
-      - name: Just use two regions for now
-        run: |
-          echo "us-east-1" > regions.txt
-          echo "us-east-2" >> regions.txt
-
       - name: Get images for each region
         run: |
           #!/bin/bash
