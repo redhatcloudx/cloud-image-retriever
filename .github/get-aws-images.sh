@@ -11,7 +11,7 @@ done
 sem --wait
 
 for REGION in $(cat regions.txt); do
-  cat ${REGION}-raw.json | jq .Images | jq --arg newval "$REGION" '.Images[] += { Region: $newval }' > aws-${REGION}.json
+  cat ${REGION}-raw.json | jq .Images | jq --arg newval "$REGION" '.[] += { Region: $newval }' > aws-${REGION}.json
 done
 
 # Merge all of the JSON files into one.
