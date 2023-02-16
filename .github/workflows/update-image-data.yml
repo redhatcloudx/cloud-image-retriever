@@ -47,8 +47,8 @@ jobs:
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
         with:
-          name: aws-image-data
-          path: "*.json"
+          name: aws
+          path: "index.json"
 
   Azure:
     runs-on: ubuntu-latest
@@ -71,7 +71,7 @@ jobs:
         run: |
           az account show
           az group list
-          az vm image list --all --only-show-errors -o json -l eastus | jq -c > azure.json
+          az vm image list --all --only-show-errors -o json -l eastus | jq -c > index.json
 
       # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
       - name: Configure AWS credentials
@@ -81,17 +81,11 @@ jobs:
           role-duration-seconds: 1800
           aws-region: us-east-2
 
-      - name: Upload to S3 storage
-        run: |
-          mkdir -vp azure
-          cp azure.json azure/index.json
-          s3cmd sync --progress --verbose --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/azure/ s3://cloudx-json-bucket/raw/azure/
-
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
         with:
-          name: azure-image-data
-          path: "azure.json"
+          name: azure
+          path: "index.json"
 
   GCP:
     runs-on: ubuntu-latest
@@ -114,7 +108,7 @@ jobs:
 
       - name: Get images
         run: |
-          gcloud compute images list --standard-images --format="json" | jq -c > gcp.json
+          gcloud compute images list --standard-images --format="json" | jq -c > index.json
 
       # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
       - name: Configure AWS credentials
@@ -124,17 +118,11 @@ jobs:
           role-duration-seconds: 1800
           aws-region: us-east-2
 
-      - name: Upload to S3 storage
-        run: |
-          mkdir -vp gcp
-          cp gcp.json gcp/index.json
-          s3cmd sync --progress --verbose --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/gcp/ s3://cloudx-json-bucket/raw/gcp/
-
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
         with:
-          name: gcp-image-data
-          path: "gcp.json"
+          name: gcp
+          path: "index.json"
 
   parser:
     name: "🔎 Parse image data"
@@ -143,8 +131,22 @@ jobs:
     steps:
       - uses: "actions/checkout@v3"
 
+      # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
+          role-duration-seconds: 1800
+          aws-region: us-east-2
+
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v3
 
       - name: List files
         run: ls -alRh .
+
+      - name: Upload to S3
+        run: |
+          mkdir raw
+          mv {aws,azure,gcp} raw
+          s3cmd sync --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/raw/ s3://cloudx-json-bucket/raw/
