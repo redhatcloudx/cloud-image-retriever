@@ -23,11 +23,11 @@ def read_json(region: str) -> pd.DataFrame:
         "VirtualizationType",
         "CreationDate",
     ]
-    region_view = temp_df[schema_fields].copy()
+    #region_view = temp_df[schema_fields].copy()
 
     # Add the region to the view.
-    region_view["Region"] = region
-    return region_view
+    temp_df["Region"] = region
+    return temp_df
 
 
 def write_json(amis_df: pd.DataFrame) -> None:
