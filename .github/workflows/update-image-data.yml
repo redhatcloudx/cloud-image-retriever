@@ -45,10 +45,10 @@ jobs:
       - name: Get images for each region
         run: |
           #!/bin/bash
-          mkdir output
+          mkdir aws
           for REGION in $(cat regions.txt); do
             echo "Getting images for ${REGION}"
-            sem -j 5 "aws --region=${REGION} ec2 describe-images --filters Name=is-public,Values=true | jq .Images > output/${REGION}.json"
+            sem -j 6 "aws --region=${REGION} ec2 describe-images --filters Name=is-public,Values=true | jq -c .Images > aws/${REGION}.json"
           done
           sem --wait
 
@@ -57,20 +57,11 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install pandas
-        run: pip install pandas
-
-      - name: Join all region files into one with pandas
-        run: .github/join-aws-regions.py
-
-      - name: Compress the output
-        run: zstd -T0 --auto-threads=logical index.json
-
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
         with:
           name: aws
-          path: "index.json.zst"
+          path: "aws/*.json"
 
   Azure:
     runs-on: ubuntu-latest
@@ -88,18 +79,16 @@ jobs:
   
       - name: 'Run az commands'
         run: |
+          mkdir azure
           az account show
           az group list
-          az vm image list --all --only-show-errors -o json -l eastus | jq -c > index.json
-
-      - name: Compress the output
-        run: zstd -T0 --auto-threads=logical index.json
+          az vm image list --all --only-show-errors -o json -l eastus | jq -c > azure/eastus.json
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
         with:
           name: azure
-          path: "index.json.zst"
+          path: "azure/*.json"
 
   GCP:
     runs-on: ubuntu-latest
@@ -118,17 +107,13 @@ jobs:
         uses: "google-github-actions/setup-gcloud@v1"
 
       - name: Get images
-        run: |
-          gcloud compute images list --standard-images --format="json" | jq -c > index.json
-
-      - name: Compress the output
-        run: zstd -T0 --auto-threads=logical index.json
+        run: gcloud compute images list --standard-images --format="json" | jq -c > all.json
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
         with:
           name: gcp
-          path: "index.json.zst"
+          path: "all.json"
 
   parser:
     name: "🔎 Parse image data"
@@ -148,11 +133,18 @@ jobs:
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v3
 
+      - name: Generate directory indexes
+        run: |
+          mkdir raw
+          mv {aws,azure,gcp} raw
+          pushd raw
+            find . -type d -exec sh -c 'echo "$0" && tree "$0" -L 1 -I "index.html" -s -D > "$0/index.html"' {} \;
+          popd
+
       - name: Install s3cmd
         run: pipx install s3cmd
 
       - name: Upload to S3
         run: |
-          mkdir raw
-          mv {aws,azure,gcp} raw
-          s3cmd sync --acl-public --delete-removed --guess-mime-type --no-mime-magic $(pwd)/raw/ s3://cloudx-json-bucket/raw/
+          s3cmd sync --acl-public --delete-removed --guess-mime-type \
+            $(pwd)/raw/ s3://cloudx-json-bucket/raw/
