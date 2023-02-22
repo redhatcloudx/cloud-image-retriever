@@ -72,10 +72,11 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   
+      # Skipping the EUAP regions which are early access regions.
       - name: Get Azure locations
         run: |
           az account list-locations | \
-            jq -r '.[] | select(.metadata.regionCategory == "Recommended") | .name' | sort > locations.txt
+            jq -r '.[] | select(.metadata.regionCategory == "Recommended") | .name' | grep -v euap | sort > locations.txt
 
       - name: 'Run az commands'
         run: |
