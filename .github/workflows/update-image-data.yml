@@ -145,10 +145,6 @@ jobs:
             tree . -H "/raw" -T "Cloud Image Directory (raw data)" -o index.html
           popd
 
-      - name: Install s3cmd
-        run: pipx install s3cmd
-
       - name: Upload to S3
         run: |
-          s3cmd sync --acl-public --delete-removed --guess-mime-type --no-mime-magic \
-            $(pwd)/raw/ s3://cloudx-json-bucket/raw/
+          aws sync --acl public --delete $(pwd)/raw/ s3://cloudx-json-bucket/raw/
