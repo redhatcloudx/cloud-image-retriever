@@ -77,12 +77,20 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   
+      - name: Get Azure locations
+        run: \
+          az account list-locations | \
+            jq -r '.[] | select(.metadata.regionCategory == "Recommended") | .name' | sort > locations.txt
+
       - name: 'Run az commands'
         run: |
+          #!/bin/bash
           mkdir azure
-          az account show
-          az group list
-          az vm image list --all --only-show-errors -o json -l eastus | jq -c > azure/eastus.json
+          for LOCATION in $(cat locations.txt); do
+            echo "Getting images for ${LOCATION}"
+            sem -j 5 "az vm image list --all --only-show-errors -o json -l $LOCATION | jq -c > azure/${LOCATION}.json"
+          done
+          sem --wait
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
