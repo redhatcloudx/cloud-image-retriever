@@ -70,7 +70,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: aws
-          path: "index.json.zstd"
+          path: "index.json.zst"
 
   Azure:
     runs-on: ubuntu-latest
@@ -99,7 +99,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: azure
-          path: "index.json.zstd"
+          path: "index.json.zst"
 
   GCP:
     runs-on: ubuntu-latest
@@ -128,7 +128,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: gcp
-          path: "index.json.zstd"
+          path: "index.json.zst"
 
   parser:
     name: "🔎 Parse image data"
