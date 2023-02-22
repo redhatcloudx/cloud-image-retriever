@@ -138,7 +138,7 @@ jobs:
           mkdir raw
           mv {aws,azure,gcp} raw
           pushd raw
-            find . -type d -exec sh -c 'echo "$0" && tree "$0" -L 1 -I "index.html" -s -D > "$0/index.html"' {} \;
+            tree . -H "/raw" -T "Cloud Image Directory (raw data)" -o index.html
           popd
 
       - name: Install s3cmd
@@ -146,5 +146,5 @@ jobs:
 
       - name: Upload to S3
         run: |
-          s3cmd sync --acl-public --delete-removed --guess-mime-type \
+          s3cmd sync --acl-public --delete-removed --guess-mime-type --no-mime-magic \
             $(pwd)/raw/ s3://cloudx-json-bucket/raw/
