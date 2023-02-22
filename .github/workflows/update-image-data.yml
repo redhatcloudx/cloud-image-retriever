@@ -63,11 +63,14 @@ jobs:
       - name: Join all region files into one with pandas
         run: .github/join-aws-regions.py
 
+      - name: Compress the output
+        run: zstd -T0 -19 --auto-threads=logical index.json
+
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
         with:
           name: aws
-          path: "index.json"
+          path: "index.json.zstd"
 
   Azure:
     runs-on: ubuntu-latest
@@ -89,19 +92,14 @@ jobs:
           az group list
           az vm image list --all --only-show-errors -o json -l eastus | jq -c > index.json
 
-      # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
-          role-duration-seconds: 1800
-          aws-region: us-east-2
+      - name: Compress the output
+        run: zstd -T0 -19 --auto-threads=logical index.json
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
         with:
           name: azure
-          path: "index.json"
+          path: "index.json.zstd"
 
   GCP:
     runs-on: ubuntu-latest
@@ -123,19 +121,14 @@ jobs:
         run: |
           gcloud compute images list --standard-images --format="json" | jq -c > index.json
 
-      # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
-          role-duration-seconds: 1800
-          aws-region: us-east-2
+      - name: Compress the output
+        run: zstd -T0 -19 --auto-threads=logical index.json
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
         with:
           name: gcp
-          path: "index.json"
+          path: "index.json.zstd"
 
   parser:
     name: "🔎 Parse image data"
