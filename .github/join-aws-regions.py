@@ -14,17 +14,6 @@ def read_json(region: str) -> pd.DataFrame:
     filename = f"output/{region}.json"
     temp_df = pd.read_json(filename, orient="records")
 
-    # Create a view of the data.
-    schema_fields = [
-        "ImageId",
-        "OwnerId",
-        "Name",
-        "Architecture",
-        "VirtualizationType",
-        "CreationDate",
-    ]
-    #region_view = temp_df[schema_fields].copy()
-
     # Add the region to the view.
     temp_df["Region"] = region
     return temp_df
@@ -34,6 +23,7 @@ def write_json(amis_df: pd.DataFrame) -> None:
     """Write the json data for a region."""
     amis_df.to_json("index.json", orient="records")
     return None
+
 
 if __name__ == "__main__":
     # Read in all the data frames and concatenate them.
