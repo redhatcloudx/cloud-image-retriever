@@ -84,7 +84,7 @@ jobs:
           mkdir azure
           for LOCATION in $(cat locations.txt); do
             echo "Getting images for ${LOCATION}"
-            sem -j 5 "az vm image list --all --only-show-errors -o json -l $LOCATION | jq -c > azure/${LOCATION}.json"
+            sem -j 10 "az vm image list --all --only-show-errors -o json -l $LOCATION | jq -c > azure/${LOCATION}.json"
           done
           sem --wait
 
