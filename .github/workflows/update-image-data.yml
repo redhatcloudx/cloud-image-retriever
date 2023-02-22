@@ -64,7 +64,7 @@ jobs:
         run: .github/join-aws-regions.py
 
       - name: Compress the output
-        run: zstd -T0 -19 --auto-threads=logical index.json
+        run: zstd -T0 --auto-threads=logical index.json
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
@@ -93,7 +93,7 @@ jobs:
           az vm image list --all --only-show-errors -o json -l eastus | jq -c > index.json
 
       - name: Compress the output
-        run: zstd -T0 -19 --auto-threads=logical index.json
+        run: zstd -T0 --auto-threads=logical index.json
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
@@ -122,7 +122,7 @@ jobs:
           gcloud compute images list --standard-images --format="json" | jq -c > index.json
 
       - name: Compress the output
-        run: zstd -T0 -19 --auto-threads=logical index.json
+        run: zstd -T0 --auto-threads=logical index.json
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
