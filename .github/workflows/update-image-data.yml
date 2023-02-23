@@ -151,4 +151,4 @@ jobs:
 
       - name: Upload to S3
         run: |
-          aws sync --acl public --delete $(pwd)/raw/ s3://cloudx-json-bucket/raw/
+          aws s3 sync --acl public --delete $(pwd)/raw/ s3://cloudx-json-bucket/raw/
