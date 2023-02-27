@@ -151,4 +151,6 @@ jobs:
 
       - name: Upload to S3
         run: |
-          aws s3 sync --acl public --delete $(pwd)/raw/ s3://cloudx-json-bucket/raw/
+          pipx install s3cmd
+          s3cmd sync --acl-public --delete-removed --guess-mime-type --no-mime-magic \
+            $(pwd)/raw/ s3://cloudx-json-bucket/raw/
