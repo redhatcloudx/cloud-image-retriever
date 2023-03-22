@@ -141,8 +141,9 @@ jobs:
         run: |
           mkdir raw
           mv {aws,azure,gcp} raw
+          TIMESTAMP=$(date +%Y%m%d)
           pushd raw
-            tree . -H "/raw" -T "Cloud Image Directory (raw data)" -o index.html
+            tree . -H "/raw" -T "Cloud Image Directory (raw data from ${TIMESTAMP})" -o index.html
           popd
 
       - name: Upload to S3
