@@ -30,21 +30,4 @@ Minimal processing is done for each cloud provider:
   * No processing other than compacting the JSON
 
 Once the job finishes downloading data, the data is compressed with `zstd` and stored in a GitHub artifact.
-The next step of the workflow uploads the data to a bucket in S3 which is then served here:
-
-* AWS: https://poc.imagedirectory.cloud/raw/aws/index.json.zst
-* Azure: https://poc.imagedirectory.cloud/raw/azure/index.json.zst
-* GCP: https://poc.imagedirectory.cloud/raw/gcp/index.json.zst
-
-From there, you can read in the data using pandas:
-
-```python
-"""Simple Python script to read compressed JSON into a dataframe."""
-import pandas as pd
-
-df = pd.read_json(
-    "https://poc.imagedirectory.cloud/raw/azure/index.json.zst",
-    compression='zstd'
-)
-df.info()
-```
+The next step of the workflow uploads the data to a bucket in S3.
