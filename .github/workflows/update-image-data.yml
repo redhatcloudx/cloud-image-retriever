@@ -94,9 +94,9 @@ jobs:
           name: azure
           path: "azure/*.json"
 
-  GCP:
+  Google:
     runs-on: ubuntu-latest
-    name: "🟢 GCP"
+    name: "🟢 Google"
     steps:
       - uses: "actions/checkout@v3"
 
@@ -116,13 +116,13 @@ jobs:
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
         with:
-          name: gcp
-          path: "all.json"
+          name: google
+          path: "global.json"
 
   parser:
     name: "🔎 Parse image data"
     runs-on: ubuntu-latest
-    needs: [AWS, Azure, GCP]
+    needs: [AWS, Azure, Google]
     steps:
       - uses: "actions/checkout@v3"
 
@@ -140,7 +140,7 @@ jobs:
       - name: Generate directory indexes
         run: |
           mkdir raw
-          mv {aws,azure,gcp} raw
+          mv {aws,azure,google} raw
           TIMESTAMP=$(date +%Y%m%d)
           pushd raw
             tree . -H "/raw" -T "Cloud Image Directory (raw data from ${TIMESTAMP})" -o index.html
