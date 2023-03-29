@@ -17,3 +17,5 @@ jobs:
 
       - name: Launch the parser workflow
         run: gh workflow run parse.yml
+        env:
+          GH_TOKEN: ${{ github.token }}
