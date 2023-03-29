@@ -1,14 +1,8 @@
-name: Update image data
+name: Retriever
 
 on:
-  # push:
-  #   branches: 
-  #     - "main"
-  # pull_request:
-  #   branches:
-  #     - "main"
   schedule:
-    - cron: '45 5 * * *'
+    - cron: "45 5 * * *"
   workflow_dispatch:
 
 permissions:
@@ -65,20 +59,20 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v3
 
-      - name: 'Az CLI login'
+      - name: "Az CLI login"
         uses: azure/login@v1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  
+
       # Skipping the EUAP regions which are early access regions.
       - name: Get Azure locations
         run: |
           az account list-locations | \
             jq -r '.[] | select(.metadata.regionCategory == "Recommended") | .name' | grep -v euap | sort > locations.txt
 
-      - name: 'Run az commands'
+      - name: "Run az commands"
         run: |
           #!/bin/bash
           mkdir azure

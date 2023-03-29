@@ -1,0 +1,46 @@
+name: Parser
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_DEFAULT_OUTPUT: json
+  AWS_PAGER: ""
+
+jobs:
+  parser:
+    name: "🔎 Parse image data"
+    runs-on: ubuntu-latest
+    needs: [AWS, Azure, Google]
+    steps:
+      - uses: "actions/checkout@v3"
+
+      # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
+          role-duration-seconds: 1800
+          aws-region: us-east-2
+
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate directory indexes
+        run: |
+          mkdir raw
+          mv {aws,azure,google} raw
+          TIMESTAMP=$(date +%Y%m%d)
+          pushd raw
+            tree . -H "/raw" -T "Cloud Image Directory (raw data from ${TIMESTAMP})" -o index.html
+          popd
+
+      - name: Upload to S3
+        run: |
+          pipx install s3cmd
+          s3cmd sync --acl-public --delete-removed --guess-mime-type --no-mime-magic \
+            $(pwd)/raw/ s3://cloudx-json-bucket/raw/

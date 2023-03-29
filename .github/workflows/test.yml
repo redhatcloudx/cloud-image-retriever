@@ -1,0 +1,19 @@
+name: Tester
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  tester:
+    name: "Test workflow dispatching"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: "actions/checkout@v3"
+
+      - name: Launch the parser workflow
+        run: gh workflow run parse.yml
