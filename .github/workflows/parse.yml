@@ -31,6 +31,8 @@ jobs:
         with:
           workflow: retrieve.yml
           path: raw
+          # Run it even if the retrieval failed.
+          workflow_conclusion: completed
 
       - name: Generate directory indexes
         run: |
