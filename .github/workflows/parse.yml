@@ -42,7 +42,7 @@ jobs:
       - name: Filter AWS data
         run: |
           mkdir -p data/aws
-          poetry --directory=retriever run filter-aws --input-path raw/aws --output-path data/aws
+          poetry run filter-aws --input-path raw/aws --output-path data/aws
 
       - name: Commit filtered data to repository
         uses: EndBug/add-and-commit@v9
