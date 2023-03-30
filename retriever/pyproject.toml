@@ -6,7 +6,7 @@ authors = ["Major Hayden <major@redhat.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 pandas = "^1.5.3"
 click = "^8.1.3"
 
