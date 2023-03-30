@@ -34,13 +34,6 @@ jobs:
           # Run it even if the retrieval failed.
           workflow_conclusion: completed
 
-      - name: Generate directory indexes
-        run: |
-          TIMESTAMP=$(date +%Y%m%d)
-          pushd raw
-            tree . -H "/raw" -T "Cloud Image Directory (raw data from ${TIMESTAMP})" -o index.html
-          popd
-
       - name: Upload to S3
         run: |
           pipx install s3cmd
