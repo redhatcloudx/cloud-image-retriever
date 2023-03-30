@@ -118,6 +118,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [AWS, Azure, Google]
     steps:
+      - uses: "actions/checkout@v3"
+
       - name: Launch the parser workflow
         run: gh workflow run parse.yml
         env:
