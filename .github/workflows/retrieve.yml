@@ -42,7 +42,7 @@ jobs:
           mkdir aws
           for REGION in $(cat regions.txt); do
             echo "Getting images for ${REGION}"
-            sem -j 6 "aws --region=${REGION} ec2 describe-images --filters Name=is-public,Values=true | jq -c .Images > aws/${REGION}.json"
+            sem -j 6 "aws --region=${REGION} ec2 describe-images --filters Name=is-public,Values=true | jq -c '.Images | sort_by(.ImageId)' > aws/${REGION}.json"
           done
           sem --wait
 
