@@ -5,7 +5,7 @@ on:
 
 permissions:
   id-token: write
-  contents: read
+  contents: write
 
 env:
   AWS_DEFAULT_OUTPUT: json
@@ -34,15 +34,21 @@ jobs:
           # Run it even if the retrieval failed.
           workflow_conclusion: completed
 
-      - name: Run AWS filter
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "poetry"
+
+      - name: Set up retriever
         run: |
-          BASE_DIR=$(pwd)
-          mkdir -p data/aws
           pipx install poetry
-          pushd retriever
-            poetry install
-            poetry run filter-aws --input-path ${BASE_DIR}/raw/aws --output-path ${BASE_DIR}/data/aws
-          popd
+          poetry --directory=retriever install
+
+      - name: Filter AWS data
+        run: |
+          mkdir -p data/aws
+          poetry --directory=retriever run filter-aws --input-path raw/aws --output-path data/aws
 
       - name: Commit filtered data to repository
         uses: EndBug/add-and-commit@v9
