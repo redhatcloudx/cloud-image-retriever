@@ -34,15 +34,17 @@ jobs:
           # Run it even if the retrieval failed.
           workflow_conclusion: completed
 
-      - name: Set up retriever
-        run: |
-          pipx install poetry
-          poetry --directory=retriever install
+      - name: Install poetry
+        run: pipx install poetry
 
       - name: Filter AWS data
         run: |
+          BASE_DIR=$(pwd)
           mkdir -p data/aws
-          poetry run filter-aws --input-path raw/aws --output-path data/aws
+          pushd retriever
+            poetry install --no-dev
+            poetry run filter-aws --input-path ${BASE_DIR}/raw/aws --output-path ${BASE_DIR}/data/aws
+          popd
 
       - name: Commit filtered data to repository
         uses: EndBug/add-and-commit@v9
