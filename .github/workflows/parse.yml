@@ -34,11 +34,6 @@ jobs:
           # Run it even if the retrieval failed.
           workflow_conclusion: completed
 
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-
       - name: Set up retriever
         run: |
           pipx install poetry
