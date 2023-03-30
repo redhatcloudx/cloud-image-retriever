@@ -34,6 +34,16 @@ jobs:
           # Run it even if the retrieval failed.
           workflow_conclusion: completed
 
+      - name: Run AWS filter
+        run: |
+          BASE_DIR=$(pwd)
+          mkdir -p data/aws
+          pipx install poetry
+          pushd retriever
+            poetry install
+            poetry run filter-aws --input-path ${BASE_DIR}/raw/aws --output-path ${BASE_DIR}/data/aws
+          popd
+
       - name: Upload to S3
         run: |
           pipx install s3cmd
