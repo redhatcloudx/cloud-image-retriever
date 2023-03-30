@@ -6,8 +6,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write
+  actions: write
   contents: read
+  id-token: write
 
 env:
   AWS_DEFAULT_OUTPUT: json
