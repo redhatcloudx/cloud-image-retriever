@@ -20,6 +20,9 @@ def read_data(input_path):
         # Save some disk space.
         raw_df.drop(columns=["BlockDeviceMappings", "ImageLocation"], inplace=True)
 
+        # Add the region column.
+        raw_df["Region"] = region
+
         dataframes.append(raw_df)
 
     return pd.concat(dataframes)
