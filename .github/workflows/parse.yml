@@ -48,8 +48,10 @@ jobs:
 
       - name: Upload raw data to S3
         run: |
-          pipx install s3cmd
-          s3cmd sync --acl-public --delete-removed --guess-mime-type --no-mime-magic \
+          aws s3 sync \
+            --acl public-read \
+            --delete \
+            --content-type application/json \
             $(pwd)/raw/ s3://cloudx-json-bucket/raw/
 
       # Filtered data has no extension, so be sure to force the mime type here.
