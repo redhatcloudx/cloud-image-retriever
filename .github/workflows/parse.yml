@@ -18,9 +18,12 @@ jobs:
     steps:
       - uses: "actions/checkout@v3"
 
+      - name: Install awscli v2
+        uses: unfor19/install-aws-cli-action@v1
+
       # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
+        uses: aws-actions/configure-aws-credentials@v2.0.0
         with:
           role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
           role-duration-seconds: 1800
@@ -43,11 +46,17 @@ jobs:
           poetry install --no-dev
           poetry run filter-aws --input-path raw/aws --output-path filtered
 
-      - name: Upload to S3
+      - name: Upload raw data to S3
         run: |
           pipx install s3cmd
           s3cmd sync --acl-public --delete-removed --guess-mime-type --no-mime-magic \
             $(pwd)/raw/ s3://cloudx-json-bucket/raw/
-          # Filtered data has no extension, so be sure to force the mime type here.
-          s3cmd sync --acl-public --delete-removed --mime-type application/json \
+
+      # Filtered data has no extension, so be sure to force the mime type here.
+      - name: Upload filtered data to S3
+        run: |
+          aws s3 sync \
+            --acl public-read \
+            --delete \
+            --content-type application/json \
             $(pwd)/filtered/ s3://cloudx-json-bucket/filtered/
