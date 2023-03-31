@@ -48,5 +48,6 @@ jobs:
           pipx install s3cmd
           s3cmd sync --acl-public --delete-removed --guess-mime-type --no-mime-magic \
             $(pwd)/raw/ s3://cloudx-json-bucket/raw/
-          s3cmd sync --acl-public --delete-removed --guess-mime-type --no-mime-magic \
+          # Filtered data has no extension, so be sure to force the mime type here.
+          s3cmd sync --acl-public --delete-removed --mime-type application/json \
             $(pwd)/filtered/ s3://cloudx-json-bucket/filtered/
