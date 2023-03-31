@@ -46,14 +46,6 @@ jobs:
             poetry run filter-aws --input-path ${BASE_DIR}/raw/aws --output-path ${BASE_DIR}/data/aws
           popd
 
-      - name: Commit filtered data to repository
-        uses: EndBug/add-and-commit@v9
-        with:
-          add: data
-          author_name: "GitHub Actions"
-          author_email: "noreply@imagedirectory.cloud"
-          push: true
-
       - name: Upload to S3
         run: |
           pipx install s3cmd
