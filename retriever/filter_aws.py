@@ -33,7 +33,7 @@ def filter_by_owner(image_df, output_path):
     """Filter by owner."""
     print("Writing filtered files...")
 
-    output_dir = os.path.join(output_path, "aws", "OwnerId")
+    output_dir = os.path.join(output_path, "aws", "owner")
     os.makedirs(output_dir, exist_ok=True)
 
     for owner_id in image_df["OwnerId"].unique():
