@@ -1,4 +1,5 @@
 """Filter AWS raw data."""
+# pylint: disable=no-member
 import os
 from glob import glob
 
@@ -28,16 +29,16 @@ def read_data(input_path):
     return pd.concat(dataframes)
 
 
-def filter_by_owner(df, output_path):
+def filter_by_owner(image_df, output_path):
     """Filter by owner."""
-    print(f"Writing filtered files...")
+    print("Writing filtered files...")
 
-    OUTPUT_DIR = os.path.join(output_path, "aws", "OwnerId")
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    output_dir = os.path.join(output_path, "aws", "OwnerId")
+    os.makedirs(output_dir, exist_ok=True)
 
-    for owner_id in df["OwnerId"].unique():
-        output_json = os.path.join(OUTPUT_DIR, f"{owner_id}")
-        owner_df = df[df["OwnerId"] == owner_id]
+    for owner_id in image_df["OwnerId"].unique():
+        output_json = os.path.join(output_dir, f"{owner_id}")
+        owner_df = image_df[image_df["OwnerId"] == owner_id]
 
         # Skip owners with less than 50 images.
         if len(owner_df.index) < 50:
@@ -48,5 +49,5 @@ def filter_by_owner(df, output_path):
 
 def main(input_path, output_path):
     """Filter AWS raw data."""
-    df = read_data(input_path)
-    filter_by_owner(df, output_path)
+    image_df = read_data(input_path)
+    filter_by_owner(image_df, output_path)
