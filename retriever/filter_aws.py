@@ -57,7 +57,7 @@ def filter_region_to_csv(image_df):
     os.makedirs(output_dir, exist_ok=True)
 
     for region_id in image_df["Region"].unique():
-        region_df = image_df[image_df["Region"] == owner_id]
+        region_df = image_df[image_df["Region"] == region_id]
         output_csv = os.path.join(output_dir, f"{region_id}.csv")
         region_df.to_csv(output_csv, index=False)
 
