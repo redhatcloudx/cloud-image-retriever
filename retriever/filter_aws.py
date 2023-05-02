@@ -5,6 +5,8 @@ from glob import glob
 
 import pandas as pd
 
+OUTPUT_PATH = os.path.join("filtered")
+
 
 def read_data(input_path):
     """Read data from input path."""
@@ -29,11 +31,11 @@ def read_data(input_path):
     return pd.concat(dataframes)
 
 
-def filter_by_owner(image_df, output_path):
+def filter_by_owner(image_df):
     """Filter by owner."""
     print("Writing filtered files...")
 
-    output_dir = os.path.join(output_path, "aws", "owner")
+    output_dir = os.path.join(OUTPUT_PATH, "aws", "owner")
     os.makedirs(output_dir, exist_ok=True)
 
     for owner_id in image_df["OwnerId"].unique():
@@ -47,7 +49,21 @@ def filter_by_owner(image_df, output_path):
         owner_df.to_json(output_json, orient="records", indent=2)
 
 
+def filter_region_to_csv(image_df):
+    """Filter each region to a CSV"""
+    print("Writing filtered regions to CSV files...")
+
+    output_dir = os.path.join(OUTPUT_PATH, "aws", "region_csv")
+    os.makedirs(output_dir, exist_ok=True)
+
+    for region_id in image_df["Region"].unique():
+        region_df = image_df[image_df["Region"] == owner_id]
+        output_csv = os.path.join(output_dir, f"{region_id}.csv")
+        region_df.to_csv(output_csv, index=False)
+
+
 def main(input_path, output_path):
     """Filter AWS raw data."""
     image_df = read_data(input_path)
-    filter_by_owner(image_df, output_path)
+    filter_by_owner(image_df)
+    filter_region_to_csv(image_df)
