@@ -95,4 +95,4 @@ jobs:
 
       - name: Check artifacts
         run: |
-          ls -alR images
+          ls -alR raw
