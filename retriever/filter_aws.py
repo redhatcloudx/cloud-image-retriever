@@ -49,21 +49,7 @@ def filter_by_owner(image_df):
         owner_df.to_json(output_json, orient="records", indent=2)
 
 
-def filter_region_to_csv(image_df):
-    """Filter each region to a CSV"""
-    print("Writing filtered regions to CSV files...")
-
-    output_dir = os.path.join(OUTPUT_PATH, "aws", "region_csv")
-    os.makedirs(output_dir, exist_ok=True)
-
-    for region_id in image_df["Region"].unique():
-        region_df = image_df[image_df["Region"] == region_id]
-        output_csv = os.path.join(output_dir, f"{region_id}.csv")
-        region_df.to_csv(output_csv, index=False)
-
-
 def main(input_path, output_path):
     """Filter AWS raw data."""
     image_df = read_data(input_path)
     filter_by_owner(image_df)
-    filter_region_to_csv(image_df)

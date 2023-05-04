@@ -62,16 +62,3 @@ jobs:
             --delete \
             --content-type application/json \
             $(pwd)/filtered/ s3://cloudx-json-bucket/filtered/
-
-      - name: Add region CSV data to repository
-        run: |-
-          git config user.name "Major Hayden"
-          git config user.email "major@redhat.com"
-          git add filtered/aws/region_csv/
-          timestamp=$(date -u)
-          git commit -m "Updating region CSV data: ${timestamp}" || exit 0
-          # Sometimes there are leftover .pyc files.
-          git clean -fxd
-          git status
-          git pull --rebase
-          git push
