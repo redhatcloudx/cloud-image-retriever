@@ -18,7 +18,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - name: Clone repository
+      - name: Clone repo
         uses: actions/checkout@v3
 
       - name: Configure AWS credentials
@@ -42,15 +42,13 @@ jobs:
           echo -n $REGIONS >> $GITHUB_OUTPUT
           echo '}' >> $GITHUB_OUTPUT
 
-          cat $GITHUB_OUTPUT
-
   list_images:
     name: "List Images"
     needs: list_regions
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 5
       matrix: ${{fromJSON(needs.list_regions.outputs.matrix)}}
     env:
       REGION: ${{ matrix.region }}
@@ -58,18 +56,27 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v3
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
+          role-duration-seconds: 1800
+          aws-region: us-east-1
+
       - name: Write region data
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 10
           max_attempts: 3
           command: |
-            echo "{\"region\": \"${{ env.REGION }}\"}" > $REGION.json
+            aws --region=${REGION} ec2 describe-images \
+              --filters Name=is-public,Values=true | \
+              jq -c '.Images | sort_by(.ImageId)' > ${REGION}.json"
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
         with:
-          name: "images_${{ env.REGION }}"
+          name: "images"
           path: "${{ env.REGION }}.json"
 
   upload_data:
@@ -83,7 +90,7 @@ jobs:
       - name: Download image data artifacts
         uses: actions/download-artifact@v3
         with:
-          path: artifacts
+          path: raw
 
       - name: Check artifacts
         run: |
