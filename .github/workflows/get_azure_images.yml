@@ -44,7 +44,7 @@ jobs:
           echo '}' >> $GITHUB_OUTPUT
 
           # Temporary short circuit because Azure's API is incredibly slow. 👀
-          echo -n 'matrix={"region": "eastus"}' > $GITHUB_OUTPUT
+          echo -n 'matrix={"region": ["eastus"]}' > $GITHUB_OUTPUT
 
   list_images:
     name: "List Images"
