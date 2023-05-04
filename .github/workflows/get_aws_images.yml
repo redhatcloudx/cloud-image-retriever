@@ -77,7 +77,7 @@ jobs:
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
         with:
-          name: "images"
+          name: "aws"
           path: "${{ env.REGION }}.json.zst"
 
   upload_data:
@@ -93,6 +93,26 @@ jobs:
         with:
           path: raw
 
-      - name: Check artifacts
+      - name: Install awscli v2
+        uses: unfor19/install-aws-cli-action@v1
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
+          role-duration-seconds: 1800
+          aws-region: us-east-1
+
+      - name: Decompress artifacts
         run: |
-          ls -alR raw
+          pushd raw/aws
+            zstd -vd --rm *
+          popd
+
+      - name: Upload raw data to S3
+        run: |
+          aws s3 sync \
+            --acl public-read \
+            --delete \
+            --content-type application/json \
+            $(pwd)/raw/aws/ s3://cloudx-json-bucket/raw/aws/
