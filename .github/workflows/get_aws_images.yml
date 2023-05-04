@@ -1,12 +1,9 @@
 name: AWS Images
 
 on:
-  # schedule:
-  #   - cron: "45 5 * * *"
   workflow_dispatch:
 
 permissions:
-  actions: write
   contents: read
   id-token: write
 
