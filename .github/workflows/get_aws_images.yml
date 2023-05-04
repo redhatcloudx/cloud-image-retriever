@@ -72,12 +72,13 @@ jobs:
             aws --region=${REGION} ec2 describe-images \
               --filters Name=is-public,Values=true | \
               jq -c '.Images | sort_by(.ImageId)' > ${REGION}.json
+            zst ${REGION}.json
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
         with:
           name: "images"
-          path: "${{ env.REGION }}.json"
+          path: "${{ env.REGION }}.json.zst"
 
   upload_data:
     name: "Upload Data"
