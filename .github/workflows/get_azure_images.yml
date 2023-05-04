@@ -43,6 +43,9 @@ jobs:
           echo -n $REGIONS >> $GITHUB_OUTPUT
           echo '}' >> $GITHUB_OUTPUT
 
+          # Temporary short circuit because Azure's API is incredibly slow. 👀
+          echo -n 'matrix={"region": "eastus"}' > $GITHUB_OUTPUT
+
   list_images:
     name: "List Images"
     needs: list_regions
