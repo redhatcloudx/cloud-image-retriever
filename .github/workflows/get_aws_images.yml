@@ -114,5 +114,6 @@ jobs:
           aws s3 sync \
             --acl public-read \
             --delete \
+            --no-progress \
             --content-type application/json \
             $(pwd)/raw/aws/ s3://cloudx-json-bucket/raw/aws/
