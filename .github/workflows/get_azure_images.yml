@@ -1,0 +1,118 @@
+name: Azure Images
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_DEFAULT_OUTPUT: json
+  AWS_PAGER: ""
+
+jobs:
+  list_regions:
+    name: "List Regions"
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v3
+
+      - name: "Az CLI login"
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get Azure locations
+        run: |
+          az account list-locations | \
+            jq -r '.[] | select(.metadata.regionCategory == "Recommended") | .name' | \
+              grep -v euap | jq --raw-input --slurp 'split("\n") | sort | del(.[0])' \
+              > regions.json
+
+      - name: Generate a list of regions for the actions matrix
+        id: set-matrix
+        run: |
+          export REGIONS=$(cat regions.json)
+          echo -n 'matrix={"region": ' >> $GITHUB_OUTPUT
+          echo -n $REGIONS >> $GITHUB_OUTPUT
+          echo '}' >> $GITHUB_OUTPUT
+
+  list_images:
+    name: "List Images"
+    needs: list_regions
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix: ${{fromJSON(needs.list_regions.outputs.matrix)}}
+    env:
+      REGION: ${{ matrix.region }}
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v3
+
+      - name: "Az CLI login"
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Write region data
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 15
+          max_attempts: 3
+          command: |
+            az vm image list --all --only-show-errors -o json -l $REGION | jq -c > ${REGION}.json
+            zstd -v ${REGION}.json
+
+      - name: Store image data in artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: "azure"
+          path: "${{ env.REGION }}.json.zst"
+
+  upload_data:
+    name: "Upload Data"
+    runs-on: ubuntu-latest
+    needs: [list_images]
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v3
+
+      - name: Download image data artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: raw
+
+      - name: Install awscli v2
+        uses: unfor19/install-aws-cli-action@v1
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
+          role-duration-seconds: 1800
+          aws-region: us-east-1
+
+      - name: Decompress artifacts
+        run: |
+          pushd raw/azure
+            zstd -vd --rm *
+          popd
+
+      # - name: Upload raw data to S3
+      #   run: |
+      #     aws s3 sync \
+      #       --acl public-read \
+      #       --delete \
+      #       --no-progress \
+      #       --content-type application/json \
+      #       $(pwd)/raw/aws/ s3://cloudx-json-bucket/raw/aws/
