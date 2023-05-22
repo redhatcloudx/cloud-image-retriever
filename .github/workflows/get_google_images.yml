@@ -40,12 +40,6 @@ jobs:
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
         with:
-          name: google
-          path: "global.json"
-
-      - name: Store image data in artifact
-        uses: actions/upload-artifact@v3
-        with:
           name: "google"
           path: "global.json.zst"
 
