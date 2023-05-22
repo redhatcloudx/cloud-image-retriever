@@ -32,7 +32,7 @@ jobs:
       - name: Download logs from artifact
         uses: dawidd6/action-download-artifact@v2
         with:
-          workflow: retrieve.yml
+          workflow: get_aws_images.yml
           path: raw
           # Run it even if the retrieval failed.
           workflow_conclusion: completed
