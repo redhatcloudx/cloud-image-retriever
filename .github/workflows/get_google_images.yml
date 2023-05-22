@@ -1,0 +1,86 @@
+name: Google Images
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+  id-token: write
+
+env:
+  AWS_DEFAULT_OUTPUT: json
+  AWS_PAGER: ""
+
+jobs:
+  list_images:
+    name: "List Images"
+    runs-on: ubuntu-latest
+    env:
+      REGION: ${{ matrix.region }}
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v3
+
+      - id: "auth"
+        name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v1"
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v1"
+
+      - name: Get images
+        run: gcloud compute images list --standard-images --format="json" | jq -c > global.json
+
+      - name: Store image data in artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: google
+          path: "global.json"
+
+      - name: Store image data in artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: "google"
+          path: "global.json.zst"
+
+  upload_data:
+    name: "Upload Data"
+    runs-on: ubuntu-latest
+    needs: [list_images]
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v3
+
+      - name: Download image data artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: raw
+
+      - name: Install awscli v2
+        uses: unfor19/install-aws-cli-action@v1
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
+          role-duration-seconds: 1800
+          aws-region: us-east-1
+
+      - name: Decompress artifacts
+        run: |
+          pushd raw/google
+            zstd -vd --rm *
+          popd
+
+      - name: Upload raw data to S3
+        run: |
+          aws s3 sync \
+            --acl public-read \
+            --delete \
+            --no-progress \
+            --content-type application/json \
+            $(pwd)/raw/google/ s3://cloudx-json-bucket/raw/google/
