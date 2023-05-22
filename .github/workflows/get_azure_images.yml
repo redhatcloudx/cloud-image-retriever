@@ -1,6 +1,8 @@
 name: Azure Images
 
 on:
+  schedule:
+    - cron: "45 4 * * *"
   workflow_dispatch:
 
 permissions:
