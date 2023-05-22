@@ -33,7 +33,9 @@ jobs:
         uses: "google-github-actions/setup-gcloud@v1"
 
       - name: Get images
-        run: gcloud compute images list --standard-images --format="json" | jq -c > global.json
+        run: |
+          gcloud compute images list --standard-images --format="json" | jq -c > global.json
+          zst -v global.json
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v3
