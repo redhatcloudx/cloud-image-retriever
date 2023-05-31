@@ -10,7 +10,7 @@ OUTPUT_PATH = os.path.join("filtered")
 
 def read_data(input_path):
     """Read data from input path."""
-    raw_files = glob(os.path.join(input_path, "*.json"))
+    raw_files = glob(os.path.join(input_path, "*.json.zst"))
 
     dataframes = []
     for raw_file in raw_files:
