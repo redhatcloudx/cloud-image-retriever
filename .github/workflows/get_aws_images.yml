@@ -3,7 +3,19 @@ name: AWS Images
 on:
   schedule:
     - cron: "45 3 * * *"
+  push:
+    branches:
+      - main
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Choose your target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - 'production'
+          - 'staging'
 
 permissions:
   actions: write
@@ -15,11 +27,41 @@ env:
   AWS_PAGER: ""
 
 jobs:
+  setup:
+    name: Setup workflow envs
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-environment.ouputs.environment }}
+      bucket: ${{ steps.set-bucket.outputs.bucket }}
+    steps:
+      # Set target environment to production if the workflow is triggered by
+      # a scheduled execution or workflow_dispatch with production input selected
+      - name: Setup target environment
+        id: set-environment
+        run: |
+          if [ ${{ github.event_name == 'schedule' }} || ${{ inputs.environment }} == "production" ]; then
+            echo "environment=production"
+          else
+            echo "environment=staging"
+          fi
+
+      - name: Setup target bucket
+        # Set target bucket according to target environment
+        id: set-bucket
+        run: |
+          if [ ${{ steps.set-environment.ouputs.environment }} == "production" ]; then
+            echo "bucket=cloudx-json-bucket"
+          else
+            echo "bucket=cid-bucket-staging"
+          fi
+
+
   list_regions:
     name: "List Regions"
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+
     steps:
       - name: Clone repo
         uses: actions/checkout@v3
@@ -126,7 +168,7 @@ jobs:
             --delete \
             --no-progress \
             --content-type application/json \
-            $(pwd)/raw/aws/ s3://cloudx-json-bucket/raw/aws/
+            $(pwd)/raw/aws/ s3://${{needs.setup.outputs.bucket}}/raw/aws/
 
   launch_parser:
     name: "Launch parser"
@@ -139,3 +181,4 @@ jobs:
         run: gh workflow run parse.yml
         env:
           GH_TOKEN: ${{ github.token }}
+
