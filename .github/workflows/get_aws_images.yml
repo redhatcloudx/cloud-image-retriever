@@ -34,7 +34,7 @@ jobs:
       environment: ${{ steps.set-environment.ouputs.environment }}
       bucket: ${{ steps.set-bucket.outputs.bucket }}
     steps:
-      # Set target environment to production if the workflow is triggered by
+      # Only set target environment to production if the workflow is triggered by
       # a scheduled execution or workflow_dispatch with production input selected
       - name: Setup target environment
         id: set-environment
@@ -49,7 +49,7 @@ jobs:
         # Set target bucket according to target environment
         id: set-bucket
         run: |
-          if [ ${{ steps.set-environment.ouputs.environment }} == "production" ]; then
+          if [ ${{ github.event_name == 'schedule' }} || ${{ inputs.environment }} == "production" ]; then
             echo "bucket=cloudx-json-bucket"
           else
             echo "bucket=cid-bucket-staging"
@@ -69,6 +69,7 @@ jobs:
           fetch-depth: 0
 
       - name: Checkout latest tagged release
+        if: ${{ needs.setup.outputs.environment }} == 'production'
         run: |
           LATEST_RELEASE=$(git describe --tags `git rev-list --tags --max-count=1`)
           git checkout $LATEST_RELEASE
@@ -148,12 +149,23 @@ jobs:
       - name: Install awscli v2
         uses: unfor19/install-aws-cli-action@v1
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials for production
         uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ needs.setup.outputs.environment }} == 'production'
         with:
           role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
           role-duration-seconds: 1800
           aws-region: us-east-1
+
+      - name: Configure AWS credentials for staging
+        uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ needs.setup.outputs.environment }} == 'production'
+        with:
+          # TODO: Add proper role
+          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
+          role-duration-seconds: 1800
+          aws-region: us-east-1
+            
 
       - name: Decompress artifacts
         run: |
