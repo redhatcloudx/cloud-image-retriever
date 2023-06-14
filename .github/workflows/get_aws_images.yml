@@ -31,7 +31,7 @@ jobs:
     name: Setup workflow envs
     runs-on: ubuntu-latest
     outputs:
-      environment: ${{ steps.set-environment.ouputs.environment }}
+      environment: ${{ steps.set-environment.outputs.environment }}
       bucket: ${{ steps.set-bucket.outputs.bucket }}
     steps:
       # Only set target environment to production if the workflow is triggered by
@@ -54,7 +54,6 @@ jobs:
           else
             echo "bucket=cid-bucket-staging" >> $GITHUB_OUTPUT
           fi
-
 
   list_regions:
     name: "List Regions"
