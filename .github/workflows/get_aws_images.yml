@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Choose your target environment'
+        description: 'Choose your deployment target environment'
         required: true
         default: 'staging'
         type: choice
@@ -39,29 +39,31 @@ jobs:
       - name: Setup target environment
         id: set-environment
         run: |
-          if [ ${{ github.event_name == 'schedule' }} || ${{ inputs.environment }} == "production" ]; then
-            echo "environment=production"
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.environment }}" = "production" ]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
           else
-            echo "environment=staging"
+            echo "environment=staging" >> $GITHUB_OUTPUT
           fi
 
       - name: Setup target bucket
         # Set target bucket according to target environment
         id: set-bucket
         run: |
-          if [ ${{ github.event_name == 'schedule' }} || ${{ inputs.environment }} == "production" ]; then
-            echo "bucket=cloudx-json-bucket"
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.environment }}" = "production" ]; then
+            echo "bucket=cloudx-json-bucket" >> $GITHUB_OUTPUT
           else
-            echo "bucket=cid-bucket-staging"
+            echo "bucket=cid-bucket-staging" >> $GITHUB_OUTPUT
           fi
 
 
   list_regions:
     name: "List Regions"
     runs-on: ubuntu-latest
+    needs: setup
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-
+    env:
+      ENVIRONMENT: ${{ needs.setup.outputs.environment }}
     steps:
       - name: Clone repo
         uses: actions/checkout@v3
@@ -69,7 +71,7 @@ jobs:
           fetch-depth: 0
 
       - name: Checkout latest tagged release
-        if: ${{ needs.setup.outputs.environment }} == 'production'
+        if: env.ENVIRONMENT == 'production'
         run: |
           LATEST_RELEASE=$(git describe --tags `git rev-list --tags --max-count=1`)
           git checkout $LATEST_RELEASE
@@ -136,7 +138,10 @@ jobs:
   upload_data:
     name: "Upload Data"
     runs-on: ubuntu-latest
-    needs: [list_images]
+    needs: [list_images, setup]
+    env:
+      ENVIRONMENT: ${{ needs.setup.outputs.environment }}      
+      BUCKET: ${{ needs.setup.outputs.bucket }}      
     steps:
       - name: Clone repo
         uses: actions/checkout@v3
@@ -151,7 +156,7 @@ jobs:
 
       - name: Configure AWS credentials for production
         uses: aws-actions/configure-aws-credentials@v2
-        if: ${{ needs.setup.outputs.environment }} == 'production'
+        if: env.ENVIRONMENT == 'production'
         with:
           role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
           role-duration-seconds: 1800
@@ -159,10 +164,9 @@ jobs:
 
       - name: Configure AWS credentials for staging
         uses: aws-actions/configure-aws-credentials@v2
-        if: ${{ needs.setup.outputs.environment }} == 'production'
+        if: env.ENVIRONMENT == 'staging'
         with:
-          # TODO: Add proper role
-          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
+          role-to-assume: arn:aws:iam::426579533370:role/github_actions_cloud_image_directory_staging
           role-duration-seconds: 1800
           aws-region: us-east-1
             
@@ -180,7 +184,7 @@ jobs:
             --delete \
             --no-progress \
             --content-type application/json \
-            $(pwd)/raw/aws/ s3://${{needs.setup.outputs.bucket}}/raw/aws/
+            $(pwd)/raw/aws/ s3://${BUCKET}/raw/aws/
 
   launch_parser:
     name: "Launch parser"
