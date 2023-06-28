@@ -23,7 +23,7 @@ jobs:
 
       # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2.1.0
+        uses: aws-actions/configure-aws-credentials@v2.2.0
         with:
           role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
           role-duration-seconds: 1800
