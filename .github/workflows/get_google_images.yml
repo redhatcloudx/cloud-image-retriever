@@ -2,7 +2,7 @@ name: Google Images
 
 on:
   schedule:
-    - cron: "45 5 * * *"
+    - cron: "45 2 * * *"
   push:
     branches:
       - main      
