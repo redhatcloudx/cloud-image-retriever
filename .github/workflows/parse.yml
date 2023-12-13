@@ -30,7 +30,7 @@ jobs:
           aws-region: us-east-2
 
       - name: Download logs from artifact
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           workflow: get_aws_images.yml
           path: raw
