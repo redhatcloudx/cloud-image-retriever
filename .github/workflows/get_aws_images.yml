@@ -201,16 +201,3 @@ jobs:
             --no-progress \
             --content-type application/json \
             $(pwd)/raw/aws/ s3://${BUCKET}/raw/aws/
-
-  launch_parser:
-    name: "Launch parser"
-    runs-on: ubuntu-latest
-    needs: [upload_data]
-    steps:
-      - uses: "actions/checkout@v4"
-
-      - name: Launch the parser workflow
-        run: gh workflow run parse.yml
-        env:
-          GH_TOKEN: ${{ github.token }}
-
