@@ -140,7 +140,7 @@ jobs:
             zstd -v ${REGION}.json
 
       - name: Store image data in artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: "azure"
           path: "${{ env.REGION }}.json.zst"
