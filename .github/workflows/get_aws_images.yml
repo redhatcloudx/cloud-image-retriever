@@ -3,9 +3,9 @@ name: AWS Images
 on:
   schedule:
     - cron: "45 3 * * *"
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
   workflow_dispatch:
     inputs:
       environment:

@@ -3,9 +3,9 @@ name: Google Images
 on:
   schedule:
     - cron: "45 2 * * *"
-  push:
-    branches:
-      - main      
+  # push:
+  #   branches:
+  #     - main
   workflow_dispatch:
     inputs:
       environment:
