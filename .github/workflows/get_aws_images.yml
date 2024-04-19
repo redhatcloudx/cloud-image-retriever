@@ -192,7 +192,7 @@ jobs:
       - name: Decompress artifacts
         run: |
           ls -alR raw
-          zstd -vd --rm raw/*/*.zst
+          zstd -vd raw/*/*.zst
           mkdir raw/aws
           mv raw/*/*.json raw/aws/
 
@@ -200,7 +200,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: "all-regions"
-          path: "raw/aws/*"
+          path: "raw/*/*.zst"
           compression-level: 0
 
       - name: Upload raw data to S3
