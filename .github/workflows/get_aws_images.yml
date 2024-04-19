@@ -142,6 +142,8 @@ jobs:
         with:
           name: "${{ env.REGION }}"
           path: "${{ env.REGION }}.json.zst"
+          compression-level: 0
+          retention-days: 1
 
   upload_data:
     name: "Upload Data"
@@ -193,6 +195,13 @@ jobs:
           zstd -vd --rm raw/*/*.zst
           mkdir raw/aws
           mv raw/*/*.json raw/aws/
+
+      - name: Store collated image data in one big artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "all-regions"
+          path: "raw/aws/*"
+          compression-level: 0
 
       - name: Upload raw data to S3
         run: |
