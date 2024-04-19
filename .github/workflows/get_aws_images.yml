@@ -140,7 +140,7 @@ jobs:
       - name: Store image data in artifact
         uses: actions/upload-artifact@v4
         with:
-          name: "aws"
+          name: "aws-${{ env.REGION }}"
           path: "${{ env.REGION }}.json.zst"
 
   upload_data:
@@ -189,9 +189,11 @@ jobs:
 
       - name: Decompress artifacts
         run: |
-          pushd raw/aws
+          pushd raw/
             zstd -vd --rm *
           popd
+          mkdir aws
+          mv raw/*.json aws/
 
       - name: Upload raw data to S3
         run: |
