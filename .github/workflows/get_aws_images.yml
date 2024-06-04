@@ -55,12 +55,10 @@ jobs:
             echo "bucket=cid-bucket-staging" >> $GITHUB_OUTPUT
           fi
 
-  list_regions:
-    name: "List Regions"
+  get_images:
+    name: "Get Images"
     runs-on: ubuntu-latest
     needs: setup
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
     env:
       ENVIRONMENT: ${{ needs.setup.outputs.environment }}
     steps:
@@ -74,101 +72,6 @@ jobs:
         run: |
           LATEST_RELEASE=$(git describe --tags `git rev-list --tags --max-count=1`)
           git checkout $LATEST_RELEASE
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
-          role-duration-seconds: 1800
-          aws-region: us-east-1
-
-      - name: Get current list of AWS regions
-        run: |
-          aws ec2 describe-regions \
-            --filters Name=opt-in-status,Values=opted-in,opt-in-not-required \
-            > aws_regions.json
-
-      - name: Generate a list of regions for the actions matrix
-        id: set-matrix
-        run: |
-          export REGIONS=$( jq -r '[.Regions[].RegionName] | sort' aws_regions.json)
-          echo -n 'matrix={"region": ' >> $GITHUB_OUTPUT
-          echo -n $REGIONS >> $GITHUB_OUTPUT
-          echo '}' >> $GITHUB_OUTPUT
-
-  list_images:
-    name: "List Images"
-    needs: [list_regions, setup]
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      max-parallel: 5
-      matrix: ${{fromJSON(needs.list_regions.outputs.matrix)}}
-    env:
-      REGION: ${{ matrix.region }}
-      ENVIRONMENT: ${{ needs.setup.outputs.environment }}        
-    steps:
-      - name: Clone repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Checkout latest tagged release
-        if: env.ENVIRONMENT == 'production'
-        run: |
-          LATEST_RELEASE=$(git describe --tags `git rev-list --tags --max-count=1`)
-          git checkout $LATEST_RELEASE
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
-          role-duration-seconds: 1800
-          aws-region: us-east-1
-
-      - name: Write region data
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          command: |
-            aws --region=${REGION} ec2 describe-images \
-              --filters "Name=owner-id,Values=309956199498" "Name=is-public,Values=true" | \
-              jq -c '.Images | sort_by(.ImageId)' |
-              jq ".[] + {\"Region\": \"${REGION}\"}" \
-              > ${REGION}.json
-
-      - name: Store image data in artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: "${{ env.REGION }}"
-          path: "${{ env.REGION }}.json"
-          compression-level: 0
-          retention-days: 1
-
-  upload_data:
-    name: "Upload Data"
-    runs-on: ubuntu-latest
-    needs: [list_images, setup]
-    env:
-      ENVIRONMENT: ${{ needs.setup.outputs.environment }}      
-      BUCKET: ${{ needs.setup.outputs.bucket }}      
-    steps:
-      - name: Clone repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Checkout latest tagged release
-        if: env.ENVIRONMENT == 'production'
-        run: |
-          LATEST_RELEASE=$(git describe --tags `git rev-list --tags --max-count=1`)
-          git checkout $LATEST_RELEASE         
-
-      - name: Download image data artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: raw
 
       - name: Install awscli v2
         uses: unfor19/install-aws-cli-action@v1
@@ -189,10 +92,26 @@ jobs:
           role-duration-seconds: 1800
           aws-region: us-east-1
 
+      - name: Get current list of AWS regions
+        run: |
+          aws ec2 describe-regions \
+            --filters Name=opt-in-status,Values=opted-in,opt-in-not-required \
+            > aws_regions.json
+          jq -r '[.Regions[].RegionName] | sort' aws_regions.json > regions.txt
+
+      - name: Get images from each region
+        run: |
+          for REGION in $(cat regions.txt); do
+            aws --region=${REGION} ec2 describe-images \
+              --filters "Name=owner-id,Values=309956199498" "Name=is-public,Values=true" | \
+              jq -c '.Images | sort_by(.ImageId)' |
+              jq ".[] + {\"Region\": \"${REGION}\"}" \
+              > output/${REGION}.json
+
       - name: Create a single AWS JSON file
         run: |
-          mkdir raw/aws
-          jq -c -s '.' raw/*/*.json > raw/aws/aws.json
+          mkdir -p raw/aws
+          jq -c -s '.' output/*.json > raw/aws/aws.json
 
       - name: Upload raw data to S3
         run: |
