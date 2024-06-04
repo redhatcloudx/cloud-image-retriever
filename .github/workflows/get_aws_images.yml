@@ -92,10 +92,9 @@ jobs:
 
       - name: Get images from each region
         run: |
-          #!/bin/bash
-          set -euxo pipefail
           mkdir -vp output
           for REGION in $(cat regions.txt); do
+            echo "Getting images for ${REGION}..."
             aws --region=${REGION} ec2 describe-images \
               --filters "Name=owner-id,Values=309956199498" "Name=is-public,Values=true" | \
               jq -c '.Images | sort_by(.ImageId)' |
