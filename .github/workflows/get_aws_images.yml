@@ -86,9 +86,8 @@ jobs:
       - name: Get current list of AWS regions
         run: |
           aws ec2 describe-regions \
-            --filters Name=opt-in-status,Values=opted-in,opt-in-not-required \
-            > aws_regions.json
-          jq -r '[.Regions[].RegionName] | sort' aws_regions.json > regions.txt
+            --filters Name=opt-in-status,Values=opted-in,opt-in-not-required |
+            jq -r '.Regions[].RegionName' | sort > regions.txt
 
       - name: Get images from each region
         run: |
