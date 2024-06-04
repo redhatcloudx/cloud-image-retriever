@@ -133,7 +133,7 @@ jobs:
           max_attempts: 3
           command: |
             aws --region=${REGION} ec2 describe-images \
-              --filters Name=owner-id,Values=309956199498 | \
+              --filters "Name=owner-id,Values=309956199498" "Name=is-public,Values=true" | \
               jq -c '.Images | sort_by(.ImageId)' |
               jq ".[] + {\"Region\": \"${REGION}\"}" \
               > ${REGION}.json
