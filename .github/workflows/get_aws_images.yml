@@ -124,6 +124,8 @@ jobs:
 
       - name: Commit JSON to git repository
         run: |-
+          #!/bin/bash
+          set -euxo pipefail
           cp raw/aws/aws.json aws.json
           git config user.name "CloudX GitHub Actions"
           git config user.email "nobody@imagedirectory.cloud"
