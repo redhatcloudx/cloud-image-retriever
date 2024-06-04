@@ -133,15 +133,16 @@ jobs:
           max_attempts: 3
           command: |
             aws --region=${REGION} ec2 describe-images \
-              --filters Name=is-public,Values=true | \
-              jq -c '.Images | sort_by(.ImageId)' > ${REGION}.json
-            zstd -v ${REGION}.json
+              --filters Name=owner-id,Values=309956199498 | \
+              jq -c '.Images | sort_by(.ImageId)' |
+              jq ".[] + {\"Region\": \"${REGION}\"}" \
+              > ${REGION}.json
 
       - name: Store image data in artifact
         uses: actions/upload-artifact@v4
         with:
           name: "${{ env.REGION }}"
-          path: "${{ env.REGION }}.json.zst"
+          path: "${{ env.REGION }}.json"
           compression-level: 0
           retention-days: 1
 
@@ -187,21 +188,12 @@ jobs:
           role-to-assume: arn:aws:iam::426579533370:role/github_actions_cloud_image_directory_staging
           role-duration-seconds: 1800
           aws-region: us-east-1
-            
 
       - name: Decompress artifacts
         run: |
           ls -alR raw
-          zstd -vd raw/*/*.zst
           mkdir raw/aws
           mv raw/*/*.json raw/aws/
-
-      - name: Store collated image data in one big artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: "all-regions"
-          path: "raw/*/*.zst"
-          compression-level: 0
 
       - name: Upload raw data to S3
         run: |
