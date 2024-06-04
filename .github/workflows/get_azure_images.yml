@@ -136,7 +136,7 @@ jobs:
           timeout_minutes: 15
           max_attempts: 3
           command: |
-            az vm image list --all --only-show-errors -o json -l $REGION | jq -c > ${REGION}.json
+            az vm image list --publisher RedHat --all --only-show-errors -o json -l $REGION | jq -c > ${REGION}.json
             zstd -v ${REGION}.json
 
       - name: Store image data in artifact
