@@ -76,19 +76,10 @@ jobs:
       - name: Install awscli v2
         uses: unfor19/install-aws-cli-action@v1
 
-      - name: Configure AWS credentials for production
+      - name: Configure AWS credentials for retrieving regions.
         uses: aws-actions/configure-aws-credentials@v4
-        if: env.ENVIRONMENT == 'production'
         with:
           role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
-          role-duration-seconds: 1800
-          aws-region: us-east-1
-
-      - name: Configure AWS credentials for staging
-        uses: aws-actions/configure-aws-credentials@v4
-        if: env.ENVIRONMENT == 'staging'
-        with:
-          role-to-assume: arn:aws:iam::426579533370:role/github_actions_cloud_image_directory_staging
           role-duration-seconds: 1800
           aws-region: us-east-1
 
@@ -112,6 +103,22 @@ jobs:
         run: |
           mkdir -p raw/aws
           jq -c -s '.' output/*.json > raw/aws/aws.json
+
+      - name: Configure AWS credentials for production
+        uses: aws-actions/configure-aws-credentials@v4
+        if: env.ENVIRONMENT == 'production'
+        with:
+          role-to-assume: arn:aws:iam::426579533370:role/github_actions_image_retriever
+          role-duration-seconds: 1800
+          aws-region: us-east-1
+
+      - name: Configure AWS credentials for staging
+        uses: aws-actions/configure-aws-credentials@v4
+        if: env.ENVIRONMENT == 'staging'
+        with:
+          role-to-assume: arn:aws:iam::426579533370:role/github_actions_cloud_image_directory_staging
+          role-duration-seconds: 1800
+          aws-region: us-east-1
 
       - name: Upload raw data to S3
         run: |
