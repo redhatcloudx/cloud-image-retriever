@@ -189,11 +189,10 @@ jobs:
           role-duration-seconds: 1800
           aws-region: us-east-1
 
-      - name: Decompress artifacts
+      - name: Create a single AWS JSON file
         run: |
-          ls -alR raw
           mkdir raw/aws
-          mv raw/*/*.json raw/aws/
+          jq -s '.' raw/*/*.json > raw/aws/aws.json
 
       - name: Upload raw data to S3
         run: |
