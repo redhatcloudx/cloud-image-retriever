@@ -19,7 +19,7 @@ on:
 
 permissions:
   actions: write
-  contents: read
+  contents: write
   id-token: write
 
 env:
@@ -202,3 +202,16 @@ jobs:
             --no-progress \
             --content-type application/json \
             $(pwd)/raw/aws/ s3://${BUCKET}/raw/aws/
+
+      - name: Commit JSON to git repository
+        run: |-
+          cp raw/aws/aws.json aws.json
+          git config user.name "CloudX GitHub Actions"
+          git config user.email "nobody@imagedirectory.cloud"
+          git add aws.json
+          timestamp=$(date -u)
+          git commit -m "Updating AWS JSON: ${timestamp}" || exit 0
+          git clean -fxd
+          git status
+          git pull --rebase
+          git push
