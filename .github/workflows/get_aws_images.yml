@@ -61,6 +61,7 @@ jobs:
     needs: setup
     env:
       ENVIRONMENT: ${{ needs.setup.outputs.environment }}
+      BUCKET: ${{ needs.setup.outputs.bucket }}    
     steps:
       - name: Clone repo
         uses: actions/checkout@v4
