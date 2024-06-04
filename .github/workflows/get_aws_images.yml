@@ -192,7 +192,7 @@ jobs:
       - name: Create a single AWS JSON file
         run: |
           mkdir raw/aws
-          jq -s '.' raw/*/*.json > raw/aws/aws.json
+          jq -c -s '.' raw/*/*.json > raw/aws/aws.json
 
       - name: Upload raw data to S3
         run: |
