@@ -54,7 +54,7 @@ jobs:
           else
             echo "bucket=cid-bucket-staging" >> $GITHUB_OUTPUT
           fi
-          
+
   list_regions:
     name: "List Regions"
     runs-on: ubuntu-latest
@@ -110,7 +110,7 @@ jobs:
       matrix: ${{fromJSON(needs.list_regions.outputs.matrix)}}
     env:
       REGION: ${{ matrix.region }}
-      ENVIRONMENT: ${{ needs.setup.outputs.environment }}        
+      ENVIRONMENT: ${{ needs.setup.outputs.environment }}
     steps:
       - name: Clone repo
         uses: actions/checkout@v4
@@ -136,7 +136,7 @@ jobs:
           timeout_minutes: 15
           max_attempts: 3
           command: |
-            az vm image list --publisher RedHat --all --only-show-errors -o json -l $REGION | jq -c > ${REGION}.json
+            az vm image list --offer rh-rhel --publisher RedHat --all --only-show-errors -o json -l $REGION | jq -c > ${REGION}.json
             zstd -v ${REGION}.json
 
       - name: Store image data in artifact
@@ -151,7 +151,7 @@ jobs:
     needs: [list_images, setup]
     env:
       ENVIRONMENT: ${{ needs.setup.outputs.environment }}
-      BUCKET: ${{ needs.setup.outputs.bucket }}        
+      BUCKET: ${{ needs.setup.outputs.bucket }}
     steps:
       - name: Clone repo
         uses: actions/checkout@v4
