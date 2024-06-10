@@ -61,7 +61,7 @@ jobs:
     needs: setup
     env:
       REGION: ${{ matrix.region }}
-      ENVIRONMENT: ${{ needs.setup.outputs.environment }}        
+      ENVIRONMENT: ${{ needs.setup.outputs.environment }}
     steps:
       - name: Clone repo
         uses: actions/checkout@v4
@@ -86,7 +86,7 @@ jobs:
 
       - name: Get images
         run: |
-          gcloud compute images list --standard-images --format="json" | jq -c > global.json
+          gcloud compute images list --project=rhel-cloud --no-standard-images --format="json" | jq -c > global.json
           zstd -v global.json
 
       - name: Store image data in artifact
@@ -101,7 +101,7 @@ jobs:
     needs: [list_images, setup]
     env:
       ENVIRONMENT: ${{ needs.setup.outputs.environment }}
-      BUCKET: ${{ needs.setup.outputs.bucket }}        
+      BUCKET: ${{ needs.setup.outputs.bucket }}
     steps:
       - name: Clone repo
         uses: actions/checkout@v4
