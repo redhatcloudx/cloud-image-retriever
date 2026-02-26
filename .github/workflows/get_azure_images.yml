@@ -140,7 +140,7 @@ jobs:
             zstd -v ${REGION}.json
 
       - name: Store image data in artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: "azure"
           path: "${{ env.REGION }}.json.zst"
@@ -165,7 +165,7 @@ jobs:
           git checkout $LATEST_RELEASE
 
       - name: Download image data artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: raw
 
