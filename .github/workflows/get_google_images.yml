@@ -90,7 +90,7 @@ jobs:
           zstd -v global.json
 
       - name: Store image data in artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: "google"
           path: "global.json.zst"
@@ -115,7 +115,7 @@ jobs:
           git checkout $LATEST_RELEASE
 
       - name: Download image data artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: raw
 
